@@ -1,0 +1,40 @@
+"""FastAPI application entry point"""
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from .config import settings
+from .database import init_db
+
+# Import routers
+# from .routers import jobs_router, applications_router
+from .routers import jobs_router
+
+# ...
+
+# Include routers
+app.include_router(jobs_router, prefix="/api/jobs", tags=["Jobs"])
+# app.include_router(applications_router, prefix="/api/applications", tags=["Applications"])
+# app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])  # TODO: Add after Google OAuth setup
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    """Global exception handler"""
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Internal server error",
+            "message": str(exc) if settings.DEBUG else "An error occurred"
+        }
+    )
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=settings.DEBUG
+    )
