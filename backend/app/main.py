@@ -1,6 +1,6 @@
 """FastAPI application entry point"""
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from .config import settings
@@ -13,7 +13,8 @@ from .routers import jobs_router, applications_router
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.VERSION,
-    description="AI-Powered Recruitment Platform API"
+    description="AI-Powered Recruitment Platform API",
+    redirect_slashes=True  # Handle trailing slashes for Vercel
 )
 
 # Configure CORS
@@ -48,6 +49,20 @@ app.include_router(applications_router, prefix="/api/applications", tags=["Appli
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "version": settings.VERSION}
+
+# Debug endpoint to see what paths are being received
+@app.get("/{path:path}")
+@app.post("/{path:path}")
+@app.put("/{path:path}")
+@app.delete("/{path:path}")
+async def debug_path(request: Request, path: str):
+    """Debug endpoint to see received paths"""
+    return {
+        "path": path,
+        "full_path": str(request.url.path),
+        "method": request.method,
+        "available_routes": [route.path for route in app.routes]
+    }
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
