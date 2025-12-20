@@ -63,8 +63,18 @@ export const jobsApi = {
       let errorMessage = 'Failed to create job';
       try {
         const error = await response.json();
-        errorMessage = error.detail || error.message || `HTTP ${response.status}: ${response.statusText}`;
         console.error('API Error:', error);
+        
+        // Handle FastAPI validation errors (422)
+        if (response.status === 422 && Array.isArray(error.detail)) {
+          const validationErrors = error.detail.map((err: any) => {
+            const field = err.loc ? err.loc.join('.') : 'field';
+            return `${field}: ${err.msg}`;
+          }).join(', ');
+          errorMessage = `Validation error: ${validationErrors}`;
+        } else {
+          errorMessage = error.detail || error.message || `HTTP ${response.status}: ${response.statusText}`;
+        }
       } catch (e) {
         errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         console.error('Failed to parse error response:', e);

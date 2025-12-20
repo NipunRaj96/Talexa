@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import { toast } from "sonner";
-import { Eye, Share, Copy, ExternalLink } from "lucide-react";
+import { Share, Copy, ExternalLink } from "lucide-react";
 import { useJobs } from "@/hooks/useJobs";
 
 interface FormData {
@@ -110,10 +110,31 @@ const CreateJobForm: React.FC = () => {
     setIsSubmitting(true);
     
     try {
+      // Validate skills
+      if (formData.skills.length === 0) {
+        toast.error('Please add at least one skill');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Convert number_of_vacancies from string to number
+      const numberOfVacancies = parseInt(formData.number_of_vacancies, 10);
+      if (isNaN(numberOfVacancies) || numberOfVacancies <= 0) {
+        toast.error('Please enter a valid number of vacancies');
+        setIsSubmitting(false);
+        return;
+      }
+      
       const jobData = {
-        ...formData,
+        job_title: formData.job_title,
+        description: formData.description || undefined,
+        minimum_experience: formData.minimum_experience,
+        number_of_vacancies: numberOfVacancies,
+        skills: formData.skills,
         status: "active" as const
       };
+      
+      console.log('Sending job data:', jobData); // Debug log
       
       const createdJob = await createJob(jobData);
       
