@@ -1,10 +1,15 @@
 """FastAPI application entry point"""
 
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from .config import settings
 from .database import init_db
+
+# Set up logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 # Import routers
 from .routers import jobs_router, applications_router
@@ -54,11 +59,18 @@ async def health_check():
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
     """Global exception handler"""
+    import traceback
+    error_trace = traceback.format_exc()
+    logger.error(f"Unhandled exception: {exc}\n{error_trace}")
+    
+    # Always show error details in response for debugging
     return JSONResponse(
         status_code=500,
         content={
             "error": "Internal server error",
-            "message": str(exc) if settings.DEBUG else "An error occurred"
+            "message": str(exc),
+            "detail": str(exc),
+            "type": type(exc).__name__
         }
     )
 

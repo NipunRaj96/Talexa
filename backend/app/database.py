@@ -81,11 +81,9 @@ def get_db() -> Generator[Session, None, None]:
     """
     db = SessionLocal()
     try:
-        # Test connection before yielding
-        db.execute("SELECT 1")
         yield db
     except Exception as e:
-        logger.error(f"Database connection error: {e}")
+        logger.error(f"Database session error: {e}")
         db.rollback()
         raise
     finally:

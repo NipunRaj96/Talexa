@@ -50,6 +50,9 @@ async def create_job(
     
     except Exception as e:
         db.rollback()
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error creating job: {e}\n{error_trace}")  # Log to console for Vercel logs
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error creating job: {str(e)}"
