@@ -86,7 +86,17 @@ class Settings(BaseSettings):
 
 
 # Create settings instance
-settings = Settings()
+try:
+    settings = Settings()
+except Exception as e:
+    # If settings fail to load, create a minimal settings object
+    print(f"Warning: Failed to load settings: {e}")
+    # This will be caught by the exception handler
+    raise
 
-# Create upload directory if it doesn't exist
-settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+# Create upload directory if it doesn't exist (only if path exists)
+try:
+    if settings.UPLOAD_DIR and settings.UPLOAD_DIR.parent.exists():
+        settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+except Exception as e:
+    print(f"Warning: Could not create upload directory: {e}")

@@ -31,9 +31,12 @@ async def startup_event():
     """Initialize database on application startup"""
     try:
         init_db()
+        print("Database initialized successfully")
     except Exception as e:
         # Log error but don't fail startup (database might already exist)
         print(f"Database initialization warning: {e}")
+        import traceback
+        traceback.print_exc()
 
 # Include routers
 app.include_router(jobs_router, prefix="/api/jobs", tags=["Jobs"])
