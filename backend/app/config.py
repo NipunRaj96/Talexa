@@ -21,7 +21,8 @@ class Settings(BaseSettings):
     # URLs
     FRONTEND_URL: str = "http://localhost:8080"
     BACKEND_URL: str = "http://localhost:8000"
-    ALLOWED_ORIGINS: str = "http://localhost:8080,http://localhost:5173,http://localhost:3000"
+    # Default origins for local development, override with ALLOWED_ORIGINS env var in production
+    ALLOWED_ORIGINS: str = "http://localhost:8080,http://localhost:5173,http://localhost:3000,https://talexa.vercel.app"
     
     # Database
     DATABASE_URL: str
@@ -62,7 +63,11 @@ class Settings(BaseSettings):
     @property
     def allowed_origins_list(self) -> List[str]:
         """Convert comma-separated origins to list"""
-        return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
+        origins = [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
+        # In production, allow all origins if ALLOWED_ORIGINS includes wildcard or is empty
+        if self.ENVIRONMENT == "production" and "*" in self.ALLOWED_ORIGINS:
+            return ["*"]
+        return origins
     
     @property
     def allowed_file_types_list(self) -> List[str]:
