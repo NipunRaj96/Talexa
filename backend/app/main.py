@@ -1,6 +1,6 @@
 """FastAPI application entry point"""
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from .config import settings
@@ -40,6 +40,7 @@ async def startup_event():
         traceback.print_exc()
 
 # Include routers
+# Note: Vercel routes /api/* to this serverless function, so paths should include /api prefix
 app.include_router(jobs_router, prefix="/api/jobs", tags=["Jobs"])
 app.include_router(applications_router, prefix="/api/applications", tags=["Applications"])
 # app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])  # TODO: Add after Google OAuth setup
@@ -49,20 +50,6 @@ app.include_router(applications_router, prefix="/api/applications", tags=["Appli
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "version": settings.VERSION}
-
-# Debug endpoint to see what paths are being received
-@app.get("/{path:path}")
-@app.post("/{path:path}")
-@app.put("/{path:path}")
-@app.delete("/{path:path}")
-async def debug_path(request: Request, path: str):
-    """Debug endpoint to see received paths"""
-    return {
-        "path": path,
-        "full_path": str(request.url.path),
-        "method": request.method,
-        "available_routes": [route.path for route in app.routes]
-    }
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):

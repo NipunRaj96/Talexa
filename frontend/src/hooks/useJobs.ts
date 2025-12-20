@@ -15,9 +15,10 @@ export const useJobs = () => {
   // Create job mutation
   const createJob = useMutation({
     mutationFn: (data: CreateJobData) => jobsApi.create(data),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       toast.success('Job created successfully!');
+      return data; // Return the created job data
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to create job');
