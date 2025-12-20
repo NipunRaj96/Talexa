@@ -40,28 +40,37 @@ if settings.DATABASE_URL.startswith("sqlite"):
         echo=settings.DEBUG,
     )
 else:
-    # PostgreSQL (Supabase) - use connection pooling for serverless
-    # For Supabase, use the connection pooler URL (port 6543) instead of direct connection (port 5432)
-    # Format: postgresql://user:pass@host:6543/dbname?pgbouncer=true
-    db_url = settings.DATABASE_URL
-    
-    # If using direct connection, suggest using pooler
-    if ":5432" in db_url and "pgbouncer" not in db_url:
-        logger.warning(
-            "Using direct PostgreSQL connection. For Vercel serverless, consider using "
-            "Supabase connection pooler (port 6543) for better performance."
-        )
-    
-    engine = create_engine(
-        db_url,
-        connect_args=pool_config.get("connect_args", {}),
-        pool_pre_ping=pool_config.get("pool_pre_ping", True),
-        pool_size=pool_config.get("pool_size", 1),  # Small pool for serverless
-        max_overflow=pool_config.get("max_overflow", 0),
-        pool_recycle=pool_config.get("pool_recycle", 300),
-        echo=settings.DEBUG,
-    )
-    logger.info("PostgreSQL engine created with connection pooling")
+       # PostgreSQL (Supabase) - use connection pooling for serverless
+       # For Supabase, use the connection pooler URL (port 6543) instead of direct connection (port 5432)
+       # Format: postgresql://user:pass@host:6543/dbname?pgbouncer=true
+       db_url = settings.DATABASE_URL
+       
+       # Remove pgbouncer=true parameter - psycopg2 doesn't recognize it
+       # The pooler URL works fine without this parameter
+       if "?pgbouncer=true" in db_url:
+           db_url = db_url.replace("?pgbouncer=true", "")
+       elif "&pgbouncer=true" in db_url:
+           db_url = db_url.replace("&pgbouncer=true", "")
+       
+       # If using direct connection, suggest using pooler
+       if ":5432" in db_url:
+           logger.warning(
+               "Using direct PostgreSQL connection. For Vercel serverless, consider using "
+               "Supabase connection pooler (port 6543) for better performance."
+           )
+       elif ":6543" in db_url:
+           logger.info("Using Supabase connection pooler (port 6543)")
+           
+       engine = create_engine(
+           db_url,
+           connect_args=pool_config.get("connect_args", {}),
+           pool_pre_ping=pool_config.get("pool_pre_ping", True),
+           pool_size=pool_config.get("pool_size", 1),  # Small pool for serverless
+           max_overflow=pool_config.get("max_overflow", 0),
+           pool_recycle=pool_config.get("pool_recycle", 300),
+           echo=settings.DEBUG,
+       )
+       logger.info("PostgreSQL engine created with connection pooling")
 
 # Create session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
