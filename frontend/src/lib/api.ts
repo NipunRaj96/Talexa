@@ -60,8 +60,16 @@ export const jobsApi = {
     });
     
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Failed to create job');
+      let errorMessage = 'Failed to create job';
+      try {
+        const error = await response.json();
+        errorMessage = error.detail || error.message || `HTTP ${response.status}: ${response.statusText}`;
+        console.error('API Error:', error);
+      } catch (e) {
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        console.error('Failed to parse error response:', e);
+      }
+      throw new Error(errorMessage);
     }
     
     return response.json();
