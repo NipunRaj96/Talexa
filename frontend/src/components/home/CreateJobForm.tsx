@@ -117,11 +117,16 @@ const CreateJobForm: React.FC = () => {
       
       const createdJob = await createJob(jobData);
       
-      if (createdJob) {
+      console.log('Created job response:', createdJob); // Debug log
+      
+      if (createdJob && createdJob.id) {
         const currentDomain = window.location.origin;
         const shareableLink = `${currentDomain}/apply/${createdJob.id}`;
         setJobLink(shareableLink);
         setJobCreated(true);
+      } else {
+        console.error('Job creation failed or missing ID:', createdJob);
+        toast.error('Job created but ID is missing. Please check the dashboard.');
       }
     } catch (error) {
       console.error("Error creating job posting:", error);
